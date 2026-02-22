@@ -4,11 +4,10 @@ from random import random, normalvariate
 import matplotlib.pyplot as plt
 from functools import reduce
 
-
 POINTS_NUM: int = 300
 CLUST_NUM: int = 3
-EPSILON: float = 0.05
-
+EPSILON: float = 0.1
+KFACTOR: float = 1
 
 def dataClouds():
     res = np.array([point2D(0, 0, i) for i in range(POINTS_NUM)])
@@ -28,7 +27,7 @@ def dataClouds():
             res[i].y = normalvariate(-1.0, 0.1)
     return res
 
-def dataMoon():
+def dataIslands():
     res = np.array([point2D(0, 0, i) for i in range(POINTS_NUM)])
     for i in range(POINTS_NUM):
         f = 3.14 * random()
@@ -57,7 +56,19 @@ class point2D:
 class cluster2D(point2D):
     def __init__(self, x: float, y: float, clustNum: int) -> None:
         super().__init__(x, y, clustNum)
+        self.radius: float = 0
         self.pointNum: int = 0
+
+    def changeRadius(self, points):
+        n: int = 0
+        sigma: float = 0
+
+        for p in points:
+            if p.clustNum == self.clustNum:
+                n += 1
+                sigma += (p.x - self.x) * (p.x - self.x) + (p.y - self.y) * (p.y - self.y)
+        sigma /= n
+        self.radius = sqrt(sigma * KFACTOR)
     
     def changePosition(self, points):
         self.pointNum = 0
@@ -80,7 +91,7 @@ def main() -> None:
     iterNum: int = 0
     colors = plt.cm.tab10(np.linspace(0, 1, CLUST_NUM))
     clusters = np.array([cluster2D(2*random()-1, 2*random()-1, i) for i in range(CLUST_NUM)])
-    points = dataMoon()
+    points = dataClouds() 
 
     for p in points:
         plt.scatter(p.x, p.y, c='black', s=20)
@@ -90,6 +101,10 @@ def main() -> None:
         iterNum += 1
         clusterCopies = np.array([point2D(clusters[i].x, clusters[i].y, i) for i in range(CLUST_NUM)])
 
+        for c in clusters: 
+            c.changePosition(points)
+            c.changeRadius(points)
+
         for p in points:
             minDist: float = EuclideanDistance(clusters[0], p)
             clustNum: int = 0
@@ -98,15 +113,19 @@ def main() -> None:
                 if tmp < minDist:
                     minDist = tmp
                     clustNum = i
-            p.clustNum = clustNum
-            plt.scatter(p.x, p.y, c=colors[clustNum], s=20)
-
-        for c in clusters: 
-            c.changePosition(points)
+            if minDist < clusters[clustNum].radius:
+                p.clustNum = clustNum
+                plt.scatter(p.x, p.y, c=colors[clustNum], s=20)
+            else:
+                p.clustNum = -1
+                plt.scatter(p.x, p.y, c='gray', s=20)
 
         for c in clusters:
                 plt.scatter(clusterCopies[c.clustNum].x, clusterCopies[c.clustNum].y, c='green', marker="*")
                 plt.scatter(c.x, c.y, c='red', marker="*")
+                circle = plt.Circle((c.x, c.y), c.radius, color=colors[c.clustNum], fill=False)
+                plt.gca().add_patch(circle)
+
         plt.show()
 
         tmp: float = reduce(lambda x, y: x + y, [EuclideanDistance(clusters[i], clusterCopies[i]) for i in range(CLUST_NUM)], 0)
