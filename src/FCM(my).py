@@ -1,5 +1,5 @@
-from math import sqrt
-from random import gauss
+from math import sqrt, ceil
+from random import gauss, random
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -14,7 +14,7 @@ TABLE = {"Setosa": 0,
          "Versicolor":1,
          "Virginica" : 2}
 
-def dataset(N):
+def dataset(N): # DIM_NUM = 2
     res = []
     for i in range(N):
         p = random()
@@ -71,27 +71,46 @@ def evalMrxU(CC, PP):
 
 CC = [point(i, [gauss(0, 4) for j in range(DIM_NUM)]) for i in range(CLUST_NUM)]
 
-PP = dataset(150)
-"""PP = []
+#PP = dataset(150)
+PP = []
 df = pd.read_csv("datasets/iris.csv")
 for i in range(len(df)):
     coords = [df.iloc[i, 0], df.iloc[i, 1], df.iloc[i, 2], df.iloc[i, 3]]
     clust = TABLE[df.iloc[i, 4]]
-    PP.append(point(clust, coords))"""
+    PP.append(point(clust, coords))
 
-    
-fig, axes = plt.subplots(2, 3, figsize=(10, 6))
+plotsNum = DIM_NUM * (DIM_NUM - 1) // 2
+colsNum = min(3, plotsNum)
+rowsNum = ceil(plotsNum / colsNum)
+
+fig, axes = plt.subplots(rowsNum, colsNum, figsize=(10, 6))
+
+if rowsNum == 1 and colsNum == 1:
+    axes = [[axes]]
+elif rowsNum == 1:
+    axes = [axes]
+elif colsNum == 1:
+    axes = [[ax] for ax in axes]
+
 n = 0
-for i in range(0, DIM_NUM):
+for i in range(DIM_NUM):
     for j in range(i+1, DIM_NUM):
-        ix = int(n/3)
-        iy = int(n%3)
+        if rowsNum == 1 and colsNum == 1:
+            ax = axes[0][0]
+        elif rowsNum == 1:
+            ax = axes[n]
+        elif colsNum == 1:
+            ax = axes[n][0]
+        else:
+            ax = axes[n // colsNum][n % colsNum]
+        
         for p in PP:
-            axes[ix][iy].scatter(p.coords[i], p.coords[j], c=COLORS[p.clustNum], s=50)
-        axes[ix][iy].set_xlabel('$Axis: ('+str(i)+', '+str(j)+')$', fontsize=10)
-        axes[ix][iy].set_xticks([])
-        axes[ix][iy].set_yticks([])
-        axes[ix][iy].autoscale()
+            ax.scatter(p.coords[i], p.coords[j], c=COLORS[p.clustNum], s=50)
+        
+        ax.set_xlabel('$Axis: ('+str(i)+', '+str(j)+')$', fontsize=10)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.autoscale()
         n += 1
 fig.tight_layout()
 plt.show()
@@ -109,21 +128,34 @@ while currIter < ITER_NUM:
     currIter += 1
     for c in CC:
         c.evalCenter(PP, U)
+fig, axes = plt.subplots(rowsNum, colsNum, figsize=(10, 6))
 
-fig, axes = plt.subplots(2, 3, figsize=(10, 6))
+if rowsNum == 1 and colsNum == 1:
+    axes = [[axes]]
+elif rowsNum == 1:
+    axes = [axes]
+elif colsNum == 1:
+    axes = [[ax] for ax in axes]
+
 n = 0
-for i in range(0, DIM_NUM):
+for i in range(DIM_NUM):
     for j in range(i+1, DIM_NUM):
-        ix = int(n/3)
-        iy = int(n%3)
+        if rowsNum == 1 and colsNum == 1:
+            ax = axes[0][0]
+        elif rowsNum == 1:
+            ax = axes[n]
+        elif colsNum == 1:
+            ax = axes[n][0]
+        else:
+            ax = axes[n // colsNum][n % colsNum]
+        
         for p in PP:
-            axes[ix][iy].scatter(p.coords[i], p.coords[j], c=COLORS[p.clustNum], s=50)
-        for c in CC:
-            axes[ix][iy].scatter(c.coords[i], c.coords[j], c='red', marker='*', s=200)
-        axes[ix][iy].set_xlabel('$Axis: ('+str(i)+', '+str(j)+')$', fontsize=10)
-        axes[ix][iy].set_xticks([])
-        axes[ix][iy].set_yticks([])
-        axes[ix][iy].autoscale()
+            ax.scatter(p.coords[i], p.coords[j], c=COLORS[p.clustNum], s=50)
+        
+        ax.set_xlabel('$Axis: ('+str(i)+', '+str(j)+')$', fontsize=10)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.autoscale()
         n += 1
 fig.tight_layout()
 plt.show()
