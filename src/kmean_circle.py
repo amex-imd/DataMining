@@ -100,12 +100,10 @@ class cluster2D(point2D):
             self.y /= self.num
 
     def evalRadius(self, P):
-        self.num = 0
         sigma = 0
 
         for p in P:
             if p.clustNum == self.clustNum:
-                self.num += 1
                 sigma += (self.x - p.x) * (self.x - p.x) + (self.y - p.y) * (self.y - p.y)
 
         if self.num > 0:
@@ -119,8 +117,8 @@ Cl = [cluster2D(i, 2.0*random()-1.0, 2.0*random()-1.0) for i in range(CLUST_NUM)
 PP = [point2D(CLUST_NUM, 0.0, 0.0) for _ in range(POINT_NUM)]
 
 #dataIsland(PP, POINT_NUM)
-#dataMoons(PP, POINT_NUM)
-dataEllipses(PP, POINT_NUM) 
+dataMoons(PP, POINT_NUM)
+#dataEllipses(PP, POINT_NUM) 
 
 for p in PP: plt.scatter(p.x, p.y, c="black", s=20) # Source data  
 plt.show()
@@ -143,8 +141,8 @@ while (1):
     for i in range(len(PP)):
         p = PP[i]
 
-        minDist = Cl[p.clustNum].EuclideanDist(p)
-        cln = p.clustNum
+        minDist = float("inf")
+        cln = None
         
         for k in range(CLUST_NUM): 
             dist = Cl[k].EuclideanDist(p)
@@ -154,7 +152,7 @@ while (1):
         
         p.clustNum = cln
 
-        plt.scatter(p.x, p.y, color=colors[p.clustNum] if p.clustNum != CLUST_NUM else "black", s=20)
+        plt.scatter(p.x, p.y, color=colors[p.clustNum] if p.clustNum is not None else "black", s=20)
 
     for cl in Cl:
             circle = plt.Circle((cl.x, cl.y), cl.radius, color="red", fill=False)
@@ -163,7 +161,7 @@ while (1):
             plt.scatter(cl.x, cl.y, color="red", marker="*") # new
     plt.show()
 
-    err = sum([Cl[i].EuclideanDist(CC[i]) for i in range(CLUST_NUM)])
+    err = sum(Cl[i].EuclideanDist(CC[i]) for i in range(CLUST_NUM))
     if (err) < EPSILON: break
 
 print(f"Iteration number: {iterNum}")
